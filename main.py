@@ -27,28 +27,31 @@ def imagine_image(message, username):
 }
 
         response = requests.request("POST", url, headers=headers, data=payload)
-        if str(response.status_code) == "200":
-                print(response.status_code)
-                json_resp = json.loads(response.text)
-                image_b64 = json_resp['choices'][0]['location'].split(',')[1]
-                image_data = base64.b64decode(image_b64)
-                image_stream = BytesIO(image_data)
-                image = Image.open(image_stream)
-                filenames = 'images/'+username+'.jpg'
-                image.save(filenames, format="JPEG")
-                print(filenames)
-                print('PASS')
-                return 'PASS'
-        else:
-                print(response.status_code)
-                return {'status':'FAIL','status_code':response.status_code}
+        try:
+            if str(response.status_code) == "200":
+                    # print(response.status_code)
+                    json_resp = json.loads(response.text)
+                    image_b64 = json_resp['choices'][0]['location'].split(',')[1]
+                    image_data = base64.b64decode(image_b64)
+                    image_stream = BytesIO(image_data)
+                    image = Image.open(image_stream)
+                    filenames = 'images/'+username+'.jpg'
+                    image.save(filenames, format="JPEG")
+                    # print(filenames)
+                    # print('PASS')
+                    return {'status':'PASS','status_code':response.status_code}
+            else:
+                    print(response.status_code)
+                    return {'status':'FAIL','status_code':response.status_code}
+        except:
+             return  {'status':'FAIL','status_code':response.status_code}
         
 
 ############################# Send message on Slack
 def send_msg_slack(strr):
     
 
-    url = "https://hooks.slack.com/services/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"
+    url = ""
 
     payload = json.dumps({
     "text": strr
@@ -69,7 +72,12 @@ tasks = [
     ("john wick", "2"),
     ("GOKU", "3"),
     ("Harry potter", "4"),
-    ("The Batman", "5")
+    ("The Batman", "5"),
+        ("Vegita", "6"),
+    ("JOHN CENA", "7"),
+    ("J cole", "8"),
+        ("Eminem", "9"),
+    ("trasnformer optimus prime", "10")
 ]
 
 
@@ -81,21 +89,23 @@ def execute_task(args):
 
 
 # Run the imagine_image function in parallel using ThreadPoolExecutor
-with ThreadPoolExecutor(max_workers=5) as executor:
+with ThreadPoolExecutor(max_workers=10) as executor:
     futures = [executor.submit(execute_task, task) for task in tasks]
     print(futures)
     # Wait for all futures to complete and print their results
     for i, j in enumerate(futures):
         # print(str(i)+" "+str(j.result()))
-        a = j.result()[i]['status']
-        if a == 'FAIL':
+        print('Result : ',j.result())
+        
+        a = j.result()
+        if a['status'] == 'FAIL':
             count.append(i)
-            send_msg_slack(str("Test Failed at "+datetime.datetime.now()))
+            send_msg_slack(str("Test Failed at "+str(datetime.datetime.now())))
 
 
 print(count)
 print(len(count))
 c = len(count)
 if count != []:
-    send_msg_slack(str(c)+" requests fails out of 5!")
+    send_msg_slack(str(c)+" requests fails out of 10!")
 count = []
